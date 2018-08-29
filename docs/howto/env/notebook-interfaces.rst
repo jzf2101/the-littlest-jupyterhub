@@ -1,8 +1,8 @@
-.. _notebook_interfaces:
+.. _howto/env/notebook_interfaces:
 
-===========================================
-Change default Notebook Interface for users
-===========================================
+=======================================
+Change default User Interface for users
+=======================================
 
 By default, logging into TLJH puts you in the classic Jupyter Notebook interface
 we all know and love. However, there are at least two other popular notebook
@@ -14,8 +14,8 @@ interfaces you can use:
 Both these interfaces are also shipped with tljh by default. You can try them
 temporarily, or set them to be the default interface whenever you login.
 
-Trying alternate interface tempoarily
-=====================================
+Trying an alternate interface temporarily
+=========================================
 
 When you log in & start your server, by default the URL in your browser
 will be something like ``/user/<username>/tree``. The ``/tree`` is what tells
@@ -36,19 +36,19 @@ You can change the default interface users get when they log in by modifying
 
    .. code-block:: yaml
 
-      sudo -E tljh-config set user_environment.default_app jupyterlab
+      sudo tljh-config set user_environment.default_app jupyterlab
 
 #. Alternatively, to launch **nteract** when users log in, run the following in the admin console:
 
    .. code-block:: yaml
 
-      sudo -E tljh-config set user_environment.default_app nteract
+      sudo tljh-config set user_environment.default_app nteract
 
 #. Apply the changes by restarting JupyterHub. This should not disrupt current users.
 
    .. code-block:: yaml
 
-      sudo -E tljh-config reload
+      sudo tljh-config reload
 
    If this causes problems, check the :ref:`troubleshoot_logs_jupyterhub` for clues
    on what went wrong.

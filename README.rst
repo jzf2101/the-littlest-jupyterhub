@@ -28,7 +28,7 @@ Development Status
 ==================
 
 This project is currently in **alpha** state. Most things work, but we might
-still make breaking changes that have no clear upgrade pathway. We are targetting
+still make breaking changes that have no clear upgrade pathway. We are targeting
 a v0.1 release sometime in mid-August 2018. Follow `this milestone <https://github.com/jupyterhub/the-littlest-jupyterhub/milestone/1>`_
 to see progress towards the release!
 
@@ -48,7 +48,7 @@ Ubuntu 18.04. We have a bunch of tutorials to get you started!
   - ... your favorite provider here, if you can contribute!
 
 - `Tutorial to install TLJH on an already running server you have root access to
-  <https://the-littlest-jupyterhub.readthedocs.io/en/latest/install/custom.html>`_.
+  <https://the-littlest-jupyterhub.readthedocs.io/en/latest/install/custom-server.html>`_.
   You should use this if your cloud provider does not already have a direct tutorial,
   or if you have experience setting up servers.
 

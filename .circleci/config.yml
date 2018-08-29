@@ -65,41 +65,63 @@ jobs:
             - run:
                 name: build systemd image
                 command: |
-                    python3 .circleci/integration-test.py build-image
+                    .circleci/integration-test.py build-image
 
             - run:
-                name: start systemd image
+                name: Run basic tests
                 command: |
-                    python3 .circleci/integration-test.py start-container
+                    .circleci/integration-test.py run-test basic-tests test_hub.py test_install.py test_extensions.py
 
             - run:
-                name: run tljh installer
+                name: Run plugin tests
                 command: |
-                    python3 .circleci/integration-test.py copy . /srv/src
-                    python3 .circleci/integration-test.py run 'python3 /srv/src/bootstrap/bootstrap.py'
+                    .circleci/integration-test.py run-test \
+                        --installer-args "--plugin /srv/src/integration-tests/plugins/simplest" \
+                        plugins test_simplest_plugin.py
 
+
+    documentation:
+        docker:
+            # Match target OS of TLJH
+            - image: ubuntu:18.04
+
+        working_directory: ~/repo
+
+        steps:
+            - checkout
+
+            # Setup Python
+            - run:
+                name: install python
+                command: |
+                    apt-get update --yes && apt-get install --yes python3 python3-venv git make
+
+            # Download and cache dependencies
+            - restore_cache:
+                key: v1-dependencies-py3.6-sphinx
 
             - run:
-                name: switch to dummyauthenticator
+                name: Setup venv
                 command: |
-                    python3 .circleci/integration-test.py run '/opt/tljh/hub/bin/tljh-config set auth.type dummyauthenticator.DummyAuthenticator'
-                    python3 .circleci/integration-test.py run '/opt/tljh/hub/bin/tljh-config reload'
+                    python3 -m venv /srv/venv
+                    echo 'export PATH=/srv/venv/bin:$PATH' >> $BASH_ENV
 
             - run:
-                name: print systemd status + logs
+                name: install dependencies
                 command: |
-                    python3 .circleci/integration-test.py run 'journalctl --no-pager'
-                    python3 .circleci/integration-test.py run 'systemctl --no-pager status jupyterhub configurable-http-proxy'
+                    pip install sphinx
+                    pip install -r docs/requirements.txt
+
+            - save_cache:
+                paths:
+                    - /srv/venv/
+                key: v1-dependencies-py3.6-sphinx
 
             - run:
-                name: install integration test requirements
+                name: build documentation
                 command: |
-                    python3 .circleci/integration-test.py run 'python3 -m pip install -r /srv/src/integration-tests/requirements.txt'
-
-            - run:
-                name: run integration tests
-                command: |
-                    python3 .circleci/integration-test.py run 'python3 -m pytest -v /srv/src/integration-tests'
+                    cd docs
+                    make html
 
 workflows:
     version: 2
@@ -107,3 +129,4 @@ workflows:
         jobs:
             - unit-test
             - integration-test
+            - documentation
