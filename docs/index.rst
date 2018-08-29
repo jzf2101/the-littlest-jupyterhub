@@ -3,7 +3,8 @@ The Littlest JupyterHub
 =======================
 
 A simple `JupyterHub <https://github.com/jupyterhub/jupyterhub>`_ distribution for
-a small (0-100) number of users on a single server.
+a small (0-100) number of users on a single server. We recommend reading
+:ref:`topic/whentouse` to determine if this is the right tool for you.
 
 Development Status
 ==================
@@ -29,39 +30,34 @@ Ubuntu 18.04. We have a bunch of tutorials to get you started.
      install/digitalocean
      install/jetstream
      install/google
-
-- :ref:`install/custom`.
-  You should use this if your cloud provider does not already have a direct tutorial,
-  or if you have experience setting up servers.
+     install/custom-server
 
 Once you are ready to run your server for real,
-it's a good idea to proceed directly to :doc:`howto/https`.
-
-Tutorials
-=========
-
-Tutorials guide you step-by-step through accomplishing a specific task.
-
-.. toctree::
-   :titlesonly:
-
-   tutorials/nbgitpuller.rst
+it's a good idea to proceed directly to :doc:`howto/admin/https`.
 
 How-To Guides
 =============
 
 How-To guides answer the question 'How do I...?' for a lot of topics.
 
+Content and Data
+----------------
+
 .. toctree::
    :titlesonly:
 
-   howto/https
-   howto/user-environment
-   howto/admin-users
-   howto/share-data
-   howto/notebook-interfaces
-   howto/resource-estimation
-   howto/nbresuse
+   howto/content/nbgitpuller
+   howto/content/add-data
+   howto/content/share-data
+
+The user environment
+--------------------
+
+.. toctree::
+   :titlesonly:
+
+   howto/env/user-environment
+   howto/env/notebook-interfaces
 
 Authentication
 --------------
@@ -74,6 +70,19 @@ with your JupyterHub. For more information on Authentication, see
    :titlesonly:
 
    howto/auth/dummy
+   howto/auth/github
+   howto/auth/firstuse
+
+Administration and security
+---------------------------
+
+.. toctree::
+   :titlesonly:
+
+   howto/admin/admin-users
+   howto/admin/resource-estimation
+   howto/admin/nbresuse
+   howto/admin/https
 
 Topic Guides
 ============
@@ -83,6 +92,7 @@ Topic guides provide in-depth explanations of specific topics.
 .. toctree::
    :titlesonly:
 
+   topic/whentouse
    topic/requirements
    topic/security
    topic/customizing-installer
@@ -126,3 +136,5 @@ to people contributing in various ways.
    contributing/docs
    contributing/code-review
    contributing/dev-setup
+   contributing/tests
+   contributing/plugins

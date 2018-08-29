@@ -1,4 +1,4 @@
-.. _user_environment:
+.. _howto/env/user_environment:
 
 ==================================
 Install conda, pip or apt packages
@@ -6,21 +6,21 @@ Install conda, pip or apt packages
 
 :abbr:`TLJH (The Littlest JupyterHub)` starts all users in the same `conda <https://conda.io/docs/>`_
 environment. Packages / libraries installed in this environment are available
-to all users on the JupyterHub. Users with :ref:`admin_access` can install packages
+to all users on the JupyterHub. Users with :ref:`admin rights <howto/admin/admin-users>` can install packages
 easily.
 
-.. _user_environment_pip:
+.. _howto/env/user_environment_pip:
 
 Installing pip packages
 =======================
 
-`pip <https://pypi.org/project/pip/>`_ is the recomended tool for installing packages
+`pip <https://pypi.org/project/pip/>`_ is the recommended tool for installing packages
 in Python from the `Python Packaging Index (PyPI) <https://pypi.org/>`_. PyPI has
 almost 145,000 packages in it right now, so a lot of what you need is going to be there!
 
 1. Log in as an admin user and open a Terminal in your Jupyter Notebook.
 
-   .. image:: ../images/notebook/new-terminal-button.png
+   .. image:: ../../images/notebook/new-terminal-button.png
       :alt: New Terminal button under New menu
 
    If you already have a terminal open as an admin user, that should work too!
@@ -39,7 +39,7 @@ almost 145,000 packages in it right now, so a lot of what you need is going to b
       If you get an error message like ``sudo: pip: command not found``,
       make sure you are not missing the ``-E`` parameter after ``sudo``.
 
-.. _user_environment_conda:
+.. _howto/env/user_environment_conda:
 
 Installing conda packages
 =========================
@@ -54,7 +54,7 @@ a community maintained repository of  conda packages.
 
 1. Log in as an admin user and open a Terminal in your Jupyter Notebook.
 
-   .. image:: ../images/notebook/new-terminal-button.png
+   .. image:: ../../images/notebook/new-terminal-button.png
       :alt: New Terminal button under New menu
 
    If you already have a terminal open as an admin user, that should work too!
@@ -73,7 +73,7 @@ a community maintained repository of  conda packages.
       If you get an error message like ``sudo: conda: command not found``,
       make sure you are not missing the ``-E`` parameter after ``sudo``.
 
-.. _user_environment_apt:
+.. _howto/env/user_environment_apt:
 
 Installing apt packages
 =======================
@@ -90,7 +90,7 @@ make sure to look in the version of Ubuntu you are using!
 
 1. Log in as an admin user and open a Terminal in your Jupyter Notebook.
 
-   .. image:: ../images/notebook/new-terminal-button.png
+   .. image:: ../../images/notebook/new-terminal-button.png
       :alt: New Terminal button under New menu
 
    If you already have a terminal open as an admin user, that should work too!
@@ -115,7 +115,7 @@ make sure to look in the version of Ubuntu you are using!
 User environment location
 =========================
 
-The user environment is a conda enviornment set up in ``/opt/tljh/user``, with
+The user environment is a conda environment set up in ``/opt/tljh/user``, with
 a Python3 kernel as the default. It is readable by all users, but writeable only
 by users who have root access. This makes it possible for JupyterHub admins (who have
 root access with ``sudo``) to install software in the user environment easily.

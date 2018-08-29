@@ -12,7 +12,7 @@ import sys
 
 # Use sudo to invoke it, since this is how users invoke it.
 # This catches issues with PATH
-TLJH_CONFIG_PATH = ['sudo', '-E', 'tljh-config']
+TLJH_CONFIG_PATH = ['sudo', 'tljh-config']
 
 def test_hub_up():
     r = requests.get('http://127.0.0.1')
@@ -28,6 +28,13 @@ async def test_user_code_execute():
     # aiohttp throws away cookies if we are connecting to an IP!
     hub_url = 'http://localhost'
     username = secrets.token_hex(8)
+
+    assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'set', 'auth.type', 'dummyauthenticator.DummyAuthenticator')).wait()
+    assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'reload')).wait()
+
+    # FIXME: wait for reload to finish & hub to come up
+    # Should be part of tljh-config reload
+    await asyncio.sleep(1)
 
     async with User(username, hub_url, partial(login_dummy, password='')) as u:
             await u.login()
@@ -49,7 +56,7 @@ async def test_user_admin_add():
     hub_url = 'http://localhost'
     username = secrets.token_hex(8)
 
-
+    assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'set', 'auth.type', 'dummyauthenticator.DummyAuthenticator')).wait()
     assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'add-item', 'users.admin', username)).wait()
     assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'reload')).wait()
 
@@ -79,6 +86,7 @@ async def test_user_admin_remove():
     hub_url = 'http://localhost'
     username = secrets.token_hex(8)
 
+    assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'set', 'auth.type', 'dummyauthenticator.DummyAuthenticator')).wait()
     assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'add-item', 'users.admin', username)).wait()
     assert 0 == await (await asyncio.create_subprocess_exec(*TLJH_CONFIG_PATH, 'reload')).wait()
 

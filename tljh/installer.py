@@ -2,16 +2,18 @@ import argparse
 import os
 import secrets
 import subprocess
+import itertools
 import sys
 import time
 import logging
 from urllib.error import HTTPError
 from urllib.request import urlopen, URLError
+import pluggy
 
 from ruamel.yaml import YAML
 
-from tljh import conda, systemd, traefik, user, apt
-from tljh.config import INSTALL_PREFIX, HUB_ENV_PREFIX, USER_ENV_PREFIX, STATE_DIR
+from tljh import conda, systemd, traefik, user, apt, hooks
+from tljh.config import INSTALL_PREFIX, HUB_ENV_PREFIX, USER_ENV_PREFIX, STATE_DIR, CONFIG_FILE
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -90,7 +92,7 @@ sckuXINIU3DFWzZGr0QrqkuE/jyr7FXeUJj9B7cLo+s/TXo+RaVfi3kOc9BoxIvy
 -----END PGP PUBLIC KEY BLOCK-----
     """.strip()
     apt.trust_gpg_key(key)
-    apt.add_source('nodesource', f'https://deb.nodesource.com/node_10.x', 'main')
+    apt.add_source('nodesource', 'https://deb.nodesource.com/node_8.x', 'main')
     apt.install_packages(['nodejs'])
 
 
@@ -152,6 +154,20 @@ def ensure_jupyterhub_service(prefix):
     systemd.enable_service('traefik')
 
 
+def ensure_jupyterlab_extensions():
+    """
+    Install the JupyterLab extensions we want.
+    """
+    extensions = [
+        '@jupyterlab/hub-extension'
+    ]
+    subprocess.check_output([
+        os.path.join(USER_ENV_PREFIX, 'bin/jupyter'),
+        'labextension',
+        'install'
+    ] + extensions)
+
+
 def ensure_jupyterhub_package(prefix):
     """
     Install JupyterHub into our conda environment if needed.
@@ -163,12 +179,12 @@ def ensure_jupyterhub_package(prefix):
     and conda packages!
     """
     conda.ensure_pip_packages(prefix, [
-        'jupyterhub==0.9.1',
+        'jupyterhub==0.9.2',
         'jupyterhub-dummyauthenticator==0.3.1',
         'jupyterhub-systemdspawner==0.11',
         'jupyterhub-firstuseauthenticator==0.10',
         'jupyterhub-ldapauthenticator==1.2.2',
-        'oauthenticator==0.7.3',
+        'oauthenticator==0.8.0',
     ])
     traefik.ensure_traefik_binary(prefix)
 
@@ -215,10 +231,10 @@ def ensure_user_environment(user_requirements_txt_file):
 
     conda.ensure_pip_packages(USER_ENV_PREFIX, [
         # JupyterHub + notebook package are base requirements for user environment
-        'jupyterhub==0.9.1',
+        'jupyterhub==0.9.2',
         'notebook==5.6.0',
         # Install additional notebook frontends!
-        'jupyterlab==0.32.1',
+        'jupyterlab==0.34.1',
         'nteract-on-jupyter==1.8.1',
         # nbgitpuller for easily pulling in Git repositories
         'nbgitpuller==0.6.1',
@@ -284,26 +300,90 @@ def ensure_jupyterhub_running(times=4):
 
 def ensure_symlinks(prefix):
     """
-    Ensure we symlink appropriate things into /usr/local/bin
+    Ensure we symlink appropriate things into /usr/bin
 
     We add the user conda environment to PATH for notebook terminals,
     but not the hub venv. This means tljh-config is not actually accessible.
 
-    We symlink to /usr/local/bin to 'fix' this. /usr/local/bin is the appropriate
-    place, and works with sudo -E
+    We symlink to /usr/bin and not /usr/local/bin, since /usr/local/bin is
+    not place, and works with sudo -E in sudo's search $PATH. We can work
+    around this with sudo -E and extra entries in the sudoers file, but this
+    is far more secure at the cost of upsetting some FHS purists.
     """
     tljh_config_src = os.path.join(prefix, 'bin', 'tljh-config')
-    tljh_config_dest = '/usr/local/bin/tljh-config'
+    tljh_config_dest = '/usr/bin/tljh-config'
     if os.path.exists(tljh_config_dest):
         if os.path.realpath(tljh_config_dest) != tljh_config_src:
             #  tljh-config exists that isn't ours. We should *not* delete this file,
             # instead we throw an error and abort. Deleting files owned by other people
             # while running as root is dangerous, especially with symlinks involved.
-            raise FileExistsError(f'/usr/local/bin/tljh-config exists but is not a symlink to {tljh_config_src}')
+            raise FileExistsError(f'/usr/bin/tljh-config exists but is not a symlink to {tljh_config_src}')
         else:
             # We have a working symlink, so do nothing
             return
     os.symlink(tljh_config_src, tljh_config_dest)
+
+
+def setup_plugins(plugins):
+    """
+    Install plugins & setup a pluginmanager
+    """
+    # Install plugins
+    if plugins:
+        conda.ensure_pip_packages(HUB_ENV_PREFIX, plugins)
+
+    # Set up plugin infrastructure
+    pm = pluggy.PluginManager('tljh')
+    pm.add_hookspecs(hooks)
+    pm.load_setuptools_entrypoints('tljh')
+
+    return pm
+
+def run_plugin_actions(plugin_manager, plugins):
+    """
+    Run installer hooks defined in plugins
+    """
+    hook = plugin_manager.hook
+    # Install apt packages
+    apt_packages = list(set(itertools.chain(*hook.tljh_extra_apt_packages())))
+    if apt_packages:
+        logger.info('Installing {} apt packages collected from plugins: {}'.format(
+            len(apt_packages), ' '.join(apt_packages)
+        ))
+        apt.install_packages(apt_packages)
+
+    # Install conda packages
+    conda_packages = list(set(itertools.chain(*hook.tljh_extra_user_conda_packages())))
+    if conda_packages:
+        logger.info('Installing {} conda packages collected from plugins: {}'.format(
+            len(conda_packages), ' '.join(conda_packages)
+        ))
+        conda.ensure_conda_packages(USER_ENV_PREFIX, conda_packages)
+
+    # Install pip packages
+    pip_packages = list(set(itertools.chain(*hook.tljh_extra_user_pip_packages())))
+    if pip_packages:
+        logger.info('Installing {} pip packages collected from plugins: {}'.format(
+            len(pip_packages), ' '.join(pip_packages)
+        ))
+        conda.ensure_pip_packages(USER_ENV_PREFIX, pip_packages)
+
+
+def ensure_config_yaml(plugin_manager):
+    """
+    Ensure we have a config.yaml present
+    """
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
+            config = rt_yaml.load(f)
+    else:
+        config = {}
+
+    hook = plugin_manager.hook
+    hook.tljh_config_post_install(config=config)
+
+    with open(CONFIG_FILE, 'w+') as f:
+        rt_yaml.dump(config, f)
 
 
 def main():
@@ -317,10 +397,15 @@ def main():
         '--user-requirements-txt-url',
         help='URL to a requirements.txt file that should be installed in the user enviornment'
     )
+    argparser.add_argument(
+        '--plugin',
+        nargs='*',
+        help='Plugin pip-specs to install'
+    )
 
     args = argparser.parse_args()
 
-
+    pm = setup_plugins(args.plugin)
 
     ensure_admins(args.admin)
 
@@ -331,9 +416,14 @@ def main():
     ensure_node()
     ensure_jupyterhub_package(HUB_ENV_PREFIX)
     ensure_chp_package(HUB_ENV_PREFIX)
+    ensure_config_yaml(pm)
+    ensure_jupyterlab_extensions()
     ensure_jupyterhub_service(HUB_ENV_PREFIX)
     ensure_jupyterhub_running()
     ensure_symlinks(HUB_ENV_PREFIX)
+
+    # Run installer plugins last
+    run_plugin_actions(pm, args.plugin)
 
     logger.info("Done!")
 
