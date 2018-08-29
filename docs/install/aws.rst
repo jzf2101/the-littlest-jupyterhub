@@ -26,14 +26,16 @@ Let's create the server on which we can run JupyterHub.
 
 #. You'll need to use an AMI from `AWS Marketplace <https://aws.amazon.com/marketplace>`_.
 
-   .. image:: ../images/providers/google/left-menu-button.png
-      :alt: Button to open the menu
+   Cannonical offers a `18.04 Ubuntu LTS AMI <https://aws.amazon.com/marketplace/pp/B07CQ33QKV>`_ with free tiers.
 
-   This opens a menu with all the cloud products Google Cloud offers.
+   .. image:: ../images/providers/aws/tljh-aws-choose-ami.png
+      :alt: Cannonical AMI
 
-#. Under **Compute Engine**, select **VM Instances**.
+  Click **Select** to select your AMI.
 
-   .. image:: ../images/providers/google/vm-instances-menu.png
+#. Under **Choose Instance Type**, select your desired instance.
+
+   .. image:: ../images/providers/aws/tljh-aws-choose-instance.png
       :alt: Navigation Menu -> Compute Engine -> VM Instances
 
 #. If you are using Google Cloud for the first time, you might have to
